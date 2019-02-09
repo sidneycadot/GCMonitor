@@ -13,6 +13,8 @@ class GCTableModel(QAbstractTableModel):
         self.counts = []
 
     def update_counts(self, counts):
+        if counts == self.counts:
+            return
         self.beginResetModel()
         self.counts = counts
         self.endResetModel()
@@ -112,12 +114,12 @@ class GCMonitorWidget(QWidget):
         counter = Counter(type(o) for o in objects)
         if self.reference_command is not None:
             if self.reference_command:
-                self.reference = counter
+                self.reference = counter.copy()
             else:
                 self.reference.clear()
             self.reference_command = None
-        counter = counter - self.reference
-        counts = counter.most_common()
+        counter.subtract(self.reference)
+        counts = [(x, y) for (x,y) in counter.most_common() if y != 0]
         self.gcmodel.update_counts(counts)
         t2 = time.monotonic()
         duration = (t2 - t1)
